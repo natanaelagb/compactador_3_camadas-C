@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct
 {
@@ -15,7 +16,6 @@ struct No
 	struct No *ant;
 	struct No *esquerda;
 	struct No *direita;
-	char caminho;
 };
 typedef struct No No;
 
@@ -47,7 +47,7 @@ No *scanner(FILE *p, int *quantidade)
 
 	for (int i = 0; i < 256; i++)
 	{
-		if (caracteres[i] > 0)
+		if (caracteres[i] > 2)
 		{
 			n++;
 			no = malloc(sizeof(No));
@@ -176,9 +176,7 @@ void arvoreHuffman(No *cabeca){
 
 	while (no1->prox != NULL)
 	{	
-		no1->caminho = '1';
 		no2 = no1->prox;
-		no2->caminho = '0';
 		novoNo = malloc(sizeof(No));
 
 		novoNo->frequencia = no1->frequencia + no2->frequencia;
@@ -213,30 +211,69 @@ int tamanhoArvore(No* no, int n, int* max){
 }
 
 
-int montarMapa(No* no, huffmanMap *mapa, char *codigo, int nivel){
+void montarMapa(No* no, huffmanMap *mapa, char *codigo, int nivel, unsigned char c){
 
-
-    if(no->esquerda != NULL){
-		if(nivel != 0){
-			codigo = realloc(codigo, nivel*sizeof(char));
-			codigo[nivel-1] = no->caminho;
-		}
-        montarMapa(no->esquerda, mapa, codigo, nivel+1);
-    }else{
-		codigo = realloc(codigo, nivel*sizeof(char));
-		codigo[nivel-1] = no->caminho;
-		codigo[nivel] = '\0';
-
+	// // printf("%d\n", nivel);
+    // if(no->esquerda != NULL ){
+	// 	codigo = realloc(codigo, nivel*sizeof(char));
+	// 	codigo[nivel-1] = '1';
+    //     montarMapa(no->esquerda, mapa, codigo, nivel+1);
+    // }else{
+	// 	codigo = realloc(codigo, nivel*sizeof(char));
+	// 	codigo[nivel] = '\0';
+	// 	// int i = 0;
+	// 	// while (no->caracter != mapa[i].caractere)
+	// 	// {
+	// 	// 	i++;
+	// 	// }
 		
-	}
-    if(r->dir != NULL){
-        n = contaNo(r->dir,n+1);
-    }
+	// 	// strcpy(mapa[i].codificacao, codigo); 
 
+	// 	printf("char: %c freq: %d\n", no->caracter, no->frequencia);
+	// 	printf("codigo: %s\n\n", codigo);		
+	// }
+    
+    // if(no->direita != NULL){
+	// 	codigo = realloc(codigo, nivel*sizeof(char));
+	// 	codigo[nivel-1] = '0';
+    //     montarMapa(no->direita, mapa, codigo, nivel+1);
+    // }else{
+	// 	codigo = realloc(codigo, nivel*sizeof(char));
+	// 	codigo[nivel] = '\0';
+	// 	// int i = 0;
+	// 	// while (no->caracter != mapa[i].caractere)
+	// 	// {
+	// 	// 	i++;
+	// 	// }
+		
+	// 	// strcpy(mapa[i].codificacao, codigo); 
+	// 	//printf("char: %c freq: %d\n ", no->caracter, no->frequencia);
+	// 	printf("char: %c freq: %d\n", no->caracter, no->frequencia);
+	// 	printf("codigo: %s\n\n", codigo);	
+	// }
+
+
+	if(no->esquerda == NULL || no->direita == NULL){
+		//codigo = realloc(codigo, nivel*sizeof(char));
+	 	//codigo[nivel-1] = '\0';
+		printf("CHAR: %c\n", no->caracter);
+		return;
+	}
+
+
+	codigo = realloc(codigo, nivel*sizeof(char));
+	codigo[nivel-1] = c;
+
+	montarMapa(no->esquerda, mapa, codigo, nivel+1, '1');
+	montarMapa(no->direita, mapa, codigo, nivel+1, '0');
+
+
+	return;
 
 }
 
 huffmanMap *inicializarMapa(No *cabeca, int quantidade, huffmanMap *map, int tamanho) {
+
 	int i = 0;
 	huffmanMap *mapa = map;
 	No *c = cabeca->prox;
@@ -285,17 +322,26 @@ int main()
 	//imprimir(cabeca);
 	//puts("----------------------------------");
 	selectionSort(cabeca);
-	//imprimir(cabeca);
+	imprimir(cabeca);
+	puts("----------------------------------");
 
 	mapa = inicializarMapa(cabeca, quantidade, mapa, 0);
 	arvoreHuffman(cabeca);
 	tamanhoArvore(cabeca->prox, 1, &tamanho);
 	mapa = inicializarMapa(cabeca, quantidade, mapa, tamanho);
+	// imprimir(cabeca);
+	//montarMapa(cabeca->prox, mapa, NULL, 1, '1');
+	//printf("c:%c f:%d\n", cabeca->prox->esquerda->esquerda->esquerda->esquerda->caracter, cabeca->prox->esquerda->esquerda->esquerda->esquerda->frequencia);
 
-	for (int i = 0; i < quantidade; i++)
-	{
-		printf("char: %c\n", mapa[i].caractere);
-	}
+	// for (int i = 0; i < quantidade; i++)
+	// {
+	// 	printf("char: %c codificacao: %s\n", mapa[i].caractere, mapa[i].codificacao);
+	// }
+
+	// for (No* n = cabeca->prox; n != NULL; n = n->prox)
+	// {
+	// 	printf("char: %c freq: %d\n", n->caracter, n->frequencia);
+	// }
 	
 	
 
@@ -303,7 +349,7 @@ int main()
 
 
 
-	//printf("Tamanho da arvore: %d\n", max);
+	printf("Tamanho da arvore: %d\n", tamanho);
 	// imprimir(cabeca);
   	// puts("----------------------------------------------\n");
 	// selectionSort(cabeca);
