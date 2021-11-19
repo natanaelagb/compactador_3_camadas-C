@@ -23,14 +23,17 @@ typedef struct
 {
 	unsigned char *codificacao;
 	int caractere;
-
 }huffmanMap;
 
 
-No *scanner(FILE *p, int *quantidade)
+
+
+
+
+No *scanner(FILE *p, int *quantidade, int *delimiter)
 {
 	int caracteres[256] = {0}, sum_freq = 0;
-	char c, n = 0;
+	int c, n = 0;
 	No *no, *noAnt, *noCabeca;
 
 	no = malloc(sizeof(No));
@@ -47,8 +50,9 @@ No *scanner(FILE *p, int *quantidade)
 
 	for (int i = 0; i < 256; i++)
 	{
-		if (caracteres[i] > 2)
+		if (caracteres[i] > 0)
 		{
+			printf("%d\n", i);
 			n++;
 			no = malloc(sizeof(No));
 			no->prox = NULL;
@@ -60,13 +64,20 @@ No *scanner(FILE *p, int *quantidade)
 
 			noAnt->prox = no;
 			noAnt = no;
+		}else if(i<126){
+			*delimiter = i;
 		}
 	}
 
 	*quantidade = n;
 
+	rewind(p);
+
 	return noCabeca;
 }
+
+
+
 
 void imprimir(No *cabeca)
 {
@@ -74,10 +85,13 @@ void imprimir(No *cabeca)
 
 	while (no != NULL)
 	{
-		printf("char: %c freq: %d\n", no->caracter, no->frequencia);
+		printf("char: %d freq: %d\n", no->caracter, no->frequencia);
 		no = no->prox;
 	}
 }
+
+
+
 
 void imprimirInverso(No *cabeca)
 {
@@ -94,6 +108,9 @@ void imprimirInverso(No *cabeca)
 		no = no->ant;
 	}
 }
+
+
+
 
 void *selectionSort(No *cabeca)
 {
@@ -163,6 +180,9 @@ void *selectionSort(No *cabeca)
 }
 
 
+
+
+
 void arvoreHuffman(No *cabeca){
 
 	No *no1, *no2, *novoNo;
@@ -193,182 +213,175 @@ void arvoreHuffman(No *cabeca){
 		no1 = cabeca->prox;
 	}	
 
-	//imprimir(cabeca);
 }
 
-int tamanhoArvore(No* no, int n, int* max){
-    if(no->esquerda != NULL){
-        n = tamanhoArvore(no->esquerda,n+1,max);
-    }
-    if(no->direita != NULL){
-        n = tamanhoArvore(no->direita,n+1,max);
-    }
 
-    if(n > *max){
-        *max = n;
-    }
-    return (n-1);
+
+
+
+
+
+
+
+void codHuffman(FILE *pRead, FILE *pWrite, huffmanMap *mapa, int quantidade, int delimiter){
+
+	int i = 0, j = 0, k = 0, byte = 0, c;
+	unsigned char bit;
+	
+	fputc(quantidade, pWrite);
+	fputc(delimiter, pWrite);
+	for (i = quantidade-1; i >= 0; i--)
+	{
+		fputc(mapa[i].caractere, pWrite);
+		fputs(mapa[i].codificacao, pWrite);
+		fputc(delimiter, pWrite);
+	}
+	fputc(delimiter, pWrite);
+
+	while((c = fgetc(pRead)) != EOF){
+
+		for (i = quantidade-1; i >= 0; i--)
+		{
+			if(mapa[i].caractere == c){
+				while(mapa[i].codificacao[j] != '\0' || k == 8){
+					if(k < 8){
+						bit = mapa[i].codificacao[j];
+						
+						if(bit == '1'){
+							byte = byte | 1;
+							byte = byte<<1;
+							// printf("1");
+						}else {
+							byte = byte<<1;
+							// printf("0");
+						}
+						j++;
+						k++;
+					}else{
+						// printf("\n");
+						byte = byte>>1;
+						fputc(byte, pWrite);
+						k = 0;
+						byte = 0;
+					}
+				}
+
+				j = 0;
+				break;
+			}
+		}
+	}
+
+	if(k>0){
+		byte = byte<<(8-(k+1));
+		// printf("\n%d", byte);
+		fputc(byte, pWrite);
+	}
+
+	fclose(pWrite);
+
 }
 
 
 void montarMapa(No* no, huffmanMap *mapa, char *codigo, int nivel, unsigned char c){
+	
+	if(c != '\0'){
+		codigo[nivel-1] = c;
+	}
+	
+	if(no->esquerda == NULL){
+	 	codigo[nivel] = '\0';
+		printf("char: %c codigo: %s\n", no->caracter, codigo);
+		int i=0;
+		while (mapa[i].caractere != no->caracter)
+		{
+			i++;
+		}
+		strcpy(mapa[i].codificacao, codigo);
 
-	// // printf("%d\n", nivel);
-    // if(no->esquerda != NULL ){
-	// 	codigo = realloc(codigo, nivel*sizeof(char));
-	// 	codigo[nivel-1] = '1';
-    //     montarMapa(no->esquerda, mapa, codigo, nivel+1);
-    // }else{
-	// 	codigo = realloc(codigo, nivel*sizeof(char));
-	// 	codigo[nivel] = '\0';
-	// 	// int i = 0;
-	// 	// while (no->caracter != mapa[i].caractere)
-	// 	// {
-	// 	// 	i++;
-	// 	// }
-		
-	// 	// strcpy(mapa[i].codificacao, codigo); 
-
-	// 	printf("char: %c freq: %d\n", no->caracter, no->frequencia);
-	// 	printf("codigo: %s\n\n", codigo);		
-	// }
-    
-    // if(no->direita != NULL){
-	// 	codigo = realloc(codigo, nivel*sizeof(char));
-	// 	codigo[nivel-1] = '0';
-    //     montarMapa(no->direita, mapa, codigo, nivel+1);
-    // }else{
-	// 	codigo = realloc(codigo, nivel*sizeof(char));
-	// 	codigo[nivel] = '\0';
-	// 	// int i = 0;
-	// 	// while (no->caracter != mapa[i].caractere)
-	// 	// {
-	// 	// 	i++;
-	// 	// }
-		
-	// 	// strcpy(mapa[i].codificacao, codigo); 
-	// 	//printf("char: %c freq: %d\n ", no->caracter, no->frequencia);
-	// 	printf("char: %c freq: %d\n", no->caracter, no->frequencia);
-	// 	printf("codigo: %s\n\n", codigo);	
-	// }
-
-
-	if(no->esquerda == NULL || no->direita == NULL){
-		//codigo = realloc(codigo, nivel*sizeof(char));
-	 	//codigo[nivel-1] = '\0';
-		printf("CHAR: %c\n", no->caracter);
 		return;
 	}
-
-
-	codigo = realloc(codigo, nivel*sizeof(char));
-	codigo[nivel-1] = c;
 
 	montarMapa(no->esquerda, mapa, codigo, nivel+1, '1');
 	montarMapa(no->direita, mapa, codigo, nivel+1, '0');
 
-
 	return;
-
 }
 
-huffmanMap *inicializarMapa(No *cabeca, int quantidade, huffmanMap *map, int tamanho) {
+
+huffmanMap *inicializarMapa(No *cabeca, int quantidade) {
 
 	int i = 0;
-	huffmanMap *mapa = map;
+	huffmanMap *mapa;
 	No *c = cabeca->prox;
 
-	if(map == NULL){
-		mapa = malloc(quantidade*sizeof(huffmanMap));
+	mapa = malloc(quantidade*sizeof(huffmanMap));
 
-		if(mapa == NULL){
-			printf("Não foi possível alocar a memória");
-			exit(1);
-		}
+	if(mapa == NULL){
+		printf("Não foi possível alocar a memória");
+		exit(1);
+	}
 
-		while(c != NULL)
-		{	
-			mapa[i].caractere = c->caracter;
-			c = c->prox;
-			i++;
-		}
-	}else {
+	while(c != NULL)
+	{	
+		mapa[i].caractere = c->caracter;
+		c = c->prox;
+		i++;
+	}
 
-		for(int i = 0; i < quantidade; i++){
-			mapa[i].codificacao = malloc(tamanho*sizeof(unsigned char));
-		}
+	for(int i = 0; i < quantidade; i++){
+		mapa[i].codificacao = malloc(quantidade*sizeof(unsigned char));
 	}
 
 	return mapa;
 }
 
+
+
+
 int main()
 {
-	int tamanho, quantidade, i = 0;
+	int quantidade, i = 0;
+	char codigo[256] = "";
+	int delimiter;
 	No *cabeca;
 	No *c;
 	huffmanMap *mapa = NULL;
-	FILE *pRead;
+	FILE *pRead, *pWrite;
 
 	pRead = fopen("meio.txt", "r");
+	pWrite = fopen("mapa.txt", "w");
 
-	if (pRead == NULL)
+	if (pRead == NULL || pWrite == NULL)
 	{
 		printf("Erro ao abrir o arquivo!\n");
 		exit(1);
 	}
 
-	cabeca = scanner(pRead, &quantidade);
+	cabeca = scanner(pRead, &quantidade, &delimiter);
 	//imprimir(cabeca);
 	//puts("----------------------------------");
 	selectionSort(cabeca);
 	imprimir(cabeca);
 	puts("----------------------------------");
-
-	mapa = inicializarMapa(cabeca, quantidade, mapa, 0);
+	mapa = inicializarMapa(cabeca, quantidade);
 	arvoreHuffman(cabeca);
-	tamanhoArvore(cabeca->prox, 1, &tamanho);
-	mapa = inicializarMapa(cabeca, quantidade, mapa, tamanho);
-	// imprimir(cabeca);
-	//montarMapa(cabeca->prox, mapa, NULL, 1, '1');
-	//printf("c:%c f:%d\n", cabeca->prox->esquerda->esquerda->esquerda->esquerda->caracter, cabeca->prox->esquerda->esquerda->esquerda->esquerda->frequencia);
+	montarMapa(cabeca->prox, mapa, codigo, 0, '\0');
+	codHuffman(pRead, pWrite, mapa, quantidade, delimiter);
 
-	// for (int i = 0; i < quantidade; i++)
-	// {
-	// 	printf("char: %c codificacao: %s\n", mapa[i].caractere, mapa[i].codificacao);
-	// }
+	printf("\nquant: %d delimiter: %d", quantidade, delimiter);
+	strcpy(codigo, mapa[0].codificacao);
+	c = cabeca->prox;
 
-	// for (No* n = cabeca->prox; n != NULL; n = n->prox)
-	// {
-	// 	printf("char: %c freq: %d\n", n->caracter, n->frequencia);
-	// }
+	for (int i = 0; i < quantidade-1; i++)
+	{
+		if(codigo[i] == '1'){
+			c = c->esquerda;
+		}else{
+			c = c->direita;
+		}
+	}
+
+	printf("\n%c %d\n", c->caracter, c->frequencia);
 	
-	
-
-	
-
-
-
-	printf("Tamanho da arvore: %d\n", tamanho);
-	// imprimir(cabeca);
-  	// puts("----------------------------------------------\n");
-	// selectionSort(cabeca);
-	// imprimir(cabeca);
-	
-
-	/*
-
-  for (int i = 0; i < cabeca_char.tamanho; i++)
-  {
-    printf("char: %c freq: %d\n", array_char[i].caracter, array_char[i].frequencia);
-  }
-
-  puts("----------------------------------------------\n");
-
-  mergeSort(array_char, 0, cabeca_char.tamanho - 1);
-
-  for (int i = 0; i < cabeca_char.tamanho; i++)
-  {
-    printf("char: %c freq: %d\n", array_char[i].caracter, array_char[i].frequencia);
-  }*/
 }
