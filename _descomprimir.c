@@ -1,7 +1,6 @@
 //Descompactador de 3 camadas: Bitmap, MeioByte e Huffman
 //Autor: Natanael Aguilar Barreto
 //
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -47,10 +46,10 @@ int unzipBitMap(FILE *pRead, FILE *pWrite) {
 
     while( (c = fgetc(pRead)) != EOF) {
 
-        if(ftell(pRead) < (tamanho - resto - 1)){
+        if(ftell(pRead) < (tamanho - resto -1)){
             bitMap = c;
-            for(i=7; i>=0; i--){
-                if(bitMap>>i & 1){
+            for(i=0; i<8; i++){
+                if(bitMap & (int)pow(2,7-i)){
                     c = getc(pRead);
                     if(c == EOF ) {
                         break;
@@ -155,59 +154,34 @@ void huffmanUnzip(FILE *pRead, FILE *pWrite) {
     resto = fgetc(pRead);
 
     printf("quant: %d\n", quantidade);
-    printf("quant: %d\n", delimiter);
+    
     
     mapa = inicializarMapa(quantidade);
 
-    while (continua)
+     while (continua)
     {
         c = fgetc(pRead);
-
-        restoCod = fgetc(pRead);
         mapa[i].caractere = c;
 
         while((c=fgetc(pRead)) != delimiter){
-
-            for (int k = 7; k >= 0; k--)
-            {
-                if(fgetc(pRead) == delimiter && (8-k) > restoCod && restoCod != 0){
-                    fseek(pRead, -1, SEEK_CUR);
-                    break;
-                }
-
-                if((c>>k & 1) == 1){
-                    codigo[j] = '1';
-                }else {
-                    codigo[j] = '0';
-                }
-
-                j++;
-                fseek(pRead, -1, SEEK_CUR);
-
-            }
-
+            codigo[j] = c;
+            j++;
         }
 
         codigo[j] = '\0';
         strcpy(mapa[i].codificacao, codigo);
-        //printf("char: %d cod: %s\n", mapa[i].caractere, mapa[i].codificacao);
 
         i++;
         j = 0;
-        //verifica fim cabeÃ§alho
+        //verifica fim cabeçalho
         if((c=fgetc(pRead)) == delimiter){
             continua = 0;
-        }else {
+        }else{
             fseek(pRead, -1, SEEK_CUR);
-        }    
+        }
     }
     
     j = 0;
-
-    for(i = 0; i<quantidade; i++){
-        printf("char: %d cod: %s\n", mapa[i].caractere, mapa[i].codificacao);
-    }
-
 
     while ((c = fgetc(pRead))  != EOF )
     {
@@ -237,8 +211,6 @@ void huffmanUnzip(FILE *pRead, FILE *pWrite) {
             }         
         }
     }
-    
-    codigo[j] = '\0';
 }
 
 

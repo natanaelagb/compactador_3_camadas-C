@@ -2,6 +2,7 @@
 //Autor: Natanael Aguilar Barreto
 //
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -394,7 +395,6 @@ No *scanner(FILE *p, int *quantidade, int *delimiter)
 			noAnt->prox = no;
 			noAnt = no;
 		}else{
-            printf("%d\n", i);
 			*delimiter = i;
 		}
 	}
@@ -542,7 +542,7 @@ void montarMapa(No* no, huffmanMap *mapa, char *codigo, int nivel, unsigned char
 	
 	if(no->esquerda == NULL){
 	 	codigo[nivel] = '\0';
-		printf("char: %d codigo: %s\n", no->caracter, codigo);
+		// printf("char: %c codigo: %s\n", no->caracter, codigo);
 		int i=0;
 		while (mapa[i].caractere != no->caracter)
 		{
@@ -589,10 +589,8 @@ huffmanMap *inicializarMapa(No *cabeca, int quantidade) {
 
 void huffmanZip(FILE *pRead, FILE *pWrite, huffmanMap *mapa, int quantidade, int delimiter){
 
-	int i = 0, j = 0, k = 0, byte = 0, offset = 1, c;
+	int i = 0, j = 0, k = 0, byte = 0, offset = 0, c;
 	unsigned char bit;
-    printf("quant: %d", quantidade);
-    delimiter = 12;
 	fputc(quantidade, pWrite);
 	fputc(delimiter, pWrite);
 	fseek(pWrite, 1, SEEK_CUR);
@@ -600,43 +598,8 @@ void huffmanZip(FILE *pRead, FILE *pWrite, huffmanMap *mapa, int quantidade, int
 	for (i = quantidade-1; i >= 0; i--)
 	{
 		fputc(mapa[i].caractere, pWrite);
-        fseek(pWrite, 1, SEEK_CUR);
-		
-        while (mapa[i].codificacao[j] != '\0')
-        {
-            if(mapa[i].codificacao[j] == '1'){
-                byte = byte | 1;     
-            }
-
-            byte = byte << 1;
-            k++;
-            j++;
-
-            if(k == 8){
-                byte = byte>>1;
-                fputc(byte, pWrite);
-                offset++;
-                k=0;
-                byte = 0;
-            }
-        
-        }
-
-        if(k>0){
-            byte = byte<<(8-(k+1));
-            fputc(byte, pWrite);
-            offset++;
-        }
-
-        fseek(pWrite, -offset, SEEK_CUR);
-        fputc(k, pWrite);
-        fseek(pWrite, offset-1, SEEK_CUR);     
-		fputc(delimiter, pWrite);
-
-        j = 0;
-        k=0;
-        byte = 0;
-        offset = 1;   
+        fputs(mapa[i].codificacao, pWrite);
+		fputc(delimiter, pWrite);  
 	}
 	fputc(delimiter, pWrite);
 
@@ -761,7 +724,7 @@ int main()
 	//imprimir(cabeca);
 	//puts("----------------------------------");
 	selectionSort(cabeca);
-	//imprimir(cabeca);
+	imprimir(cabeca);
 	puts("----------------------------------");
 	mapa = inicializarMapa(cabeca, quantidade);
 	arvoreHuffman(cabeca);
@@ -772,7 +735,8 @@ int main()
     
     fclose(pTemp2);
     fclose(pWrite);
-    fremove("temp.txt");
+    remove("temp.txt");
     remove("temp2.txt");
+
     return 1;
 }
